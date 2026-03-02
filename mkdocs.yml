@@ -77,9 +77,8 @@ nav:
       - Configuración del Entorno en R: sesion1/configuracion_r.md
   - Sesión 2 — Datos Climáticos y de Suelos:
       - Introducción: sesion2/index.md
-      - Lectura y Preparación de Datos: sesion2/lectura_datos.md
-      - Recorte y Organización Espacial: sesion2/recorte_organizacion.md
-      - Pipeline Reproducible: sesion2/pipeline.md
+      - Datos geoespaciales: sesion2/lectura_datos.md
+      - Descarga de datos climáticos y de suelos: sesion2/clima_suelo.md
   - Sesión 3 — Cálculo de Indicadores:
       - Introducción: sesion3/index.md
       - Indicadores Térmicos: sesion3/indicadores_termicos.md
@@ -97,5 +96,5 @@ extra:
       link: https://github.com/cgiar
 
 copyright: >
-  Copyright &copy; 2025 CGIAR — Alliance of Bioversity International and CIAT
+  Copyright &copy; 2026 CGIAR — Alliance of Bioversity International and CIAT
   · Universidad Zamorano
