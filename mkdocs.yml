@@ -11,6 +11,7 @@ repo_url: https://github.com/cgiar-taller-agroclimatico-frijol
 
 theme:
   name: material
+  custom_dir: overrides
   language: es
   palette:
     - scheme: default

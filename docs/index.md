@@ -1,10 +1,5 @@
 # Taller práctico en R: Indicadores Agroclimáticos para Frijol en Honduras
 
-<div style="display: flex; align-items: center; gap: 32px; margin: 16px 0 24px 0;">
-  <img src="Images/Logo_Zamorano.jpeg" alt="Universidad Zamorano" style="height: 80px;">
-  <img src="Images/Logo_Alianza.jpeg" alt="Alliance of Bioversity International and CIAT" style="height: 80px;">
-</div>
-
 ## Descripción del Taller
 
 La productividad del frijol (*Phaseolus vulgaris* L.) en Honduras depende fuertemente de la **variabilidad climática** y de las **condiciones del suelo**. Este taller introduce un flujo de trabajo reproducible en R para integrar información espacial de:
