@@ -1,36 +1,21 @@
 {% if config.extra.social or config.copyright %}
 <footer class="md-footer">
   <div class="md-footer-meta md-typeset">
-    <div class="md-footer-meta__inner md-grid" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-
-      <!-- Logos institucionales -->
-      <div style="display: flex; align-items: center; gap: 20px;">
-        <img src="{{ base_url }}/Images/Logo_Zamorano.jpeg"
-             alt="Universidad Zamorano"
-             style="height: 38px; filter: brightness(0) invert(1); opacity: 0.9;">
-        <img src="{{ base_url }}/Images/Logo_Alianza.jpeg"
-             alt="Alliance of Bioversity International and CIAT"
-             style="height: 38px; filter: brightness(0) invert(1); opacity: 0.9;">
-      </div>
-
-      <!-- Copyright -->
-      <div class="md-copyright" style="flex: 1; text-align: right;">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
         {% if config.copyright %}
-          <div class="md-copyright__highlight">
-            {{ config.copyright }}
-          </div>
+        <div class="md-copyright__highlight">
+          {{ config.copyright }}
+        </div>
         {% endif %}
         {% if not config.extra.generator == false %}
-          Construido con
-          <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-            Material for MkDocs
-          </a>
+        Construido con
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+          Material for MkDocs
+        </a>
         {% endif %}
       </div>
-
-      <!-- Redes sociales -->
       {% include "partials/social.html" %}
-
     </div>
   </div>
 </footer>

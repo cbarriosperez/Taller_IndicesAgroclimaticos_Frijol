@@ -40,6 +40,7 @@ theme:
     - search.suggest
     - content.code.copy
     - content.code.annotate
+  logo: Images/Logo_Zamorano.jpeg
   icon:
     repo: fontawesome/brands/github
 
@@ -64,6 +65,9 @@ markdown_extensions:
   - footnotes
   - toc:
       permalink: true
+
+extra_css:
+  - stylesheets/extra.css
 
 extra_javascript:
   - https://polyfill.io/v3/polyfill.min.js?features=es6
