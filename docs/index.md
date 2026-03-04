@@ -1,5 +1,19 @@
 # Taller práctico en R: Indicadores Agroclimáticos para Frijol en Honduras
 
+## Acceso Virtual — Microsoft Teams
+
+!!! tip "Enlace para unirse al taller"
+    [:fontawesome-brands-microsoft: **Unirse a la reunión en Teams**](https://teams.microsoft.com/meet/21094003872360?p=qWIKDbnChROKZmeYlw){ .md-button .md-button--primary target="_blank" }
+
+| Campo | Información |
+|-------|-------------|
+| **Enlace directo** | [https://teams.microsoft.com/meet/21094003872360](https://teams.microsoft.com/meet/21094003872360?p=qWIKDbnChROKZmeYlw) |
+| **Meeting ID** | `210 940 038 723 60` |
+| **Passcode** | `hH28FE3m` |
+| **Horario** | Miércoles · 9:00 – 11:00 am (hora Honduras, UTC–6) |
+
+---
+
 ## Descripción del Taller
 
 La productividad del frijol (*Phaseolus vulgaris* L.) en Honduras depende fuertemente de la **variabilidad climática** y de las **condiciones del suelo**. Este taller introduce un flujo de trabajo reproducible en R para integrar información espacial de:
