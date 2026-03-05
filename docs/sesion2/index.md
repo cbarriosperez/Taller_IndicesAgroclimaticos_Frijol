@@ -7,6 +7,6 @@
     Esta sesión se habilitará el <strong>miércoles 11 de marzo</strong>
     a partir de las <strong>9:00 am</strong> (hora Honduras).<br><br>
     Por ahora continúe revisando el material de la
-    <a href="../sesion1/index.md">Sesión 1</a>.
+    <a href="https://cbarriosperez.github.io/Taller_IndicesAgroclimaticos_Frijol/sesion1/">Sesión 1</a>.
   </p>
 </div>
