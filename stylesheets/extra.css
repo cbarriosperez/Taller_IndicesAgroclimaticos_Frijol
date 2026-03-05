@@ -1,0 +1,29 @@
+/* ============================================================
+   Logos institucionales en la barra de navegación superior
+   ============================================================ */
+
+/* Contenedor del logo — eliminamos padding extra */
+.md-header__button.md-logo {
+  padding: 4px 8px 4px 4px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Logo principal (Logo_Zamorano — gestionado por theme.logo) */
+.md-header__button.md-logo img {
+  height: 36px;
+  width: auto;
+  filter: brightness(0) invert(1);
+}
+
+/* Segundo logo (Logo_Alianza) inyectado como pseudo-elemento */
+.md-header__button.md-logo::after {
+  content: "";
+  display: inline-block;
+  width: 110px;
+  height: 36px;
+  background: url("../Images/Logo_Alianza.jpeg") no-repeat center / contain;
+  filter: brightness(0) invert(1);
+  flex-shrink: 0;
+}
