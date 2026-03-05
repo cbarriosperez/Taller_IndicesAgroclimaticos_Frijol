@@ -34,3 +34,5 @@ Al finalizar esta sesión, los participantes serán capaces de:
 ## Presentación de la Sesión
 
 [📥 Descargar presentación (PDF)](https://github.com/cbarriosperez/Taller_IndicesAgroclimaticos_Frijol/raw/main/docs/Presentations/Barrios-Perez_Sesion1_Fundamentos%20agroclim%C3%A1ticos%20y%20configuraci%C3%B3n%20del%20entorno%20en%20R.pdf){ download }
+
+![Sesión 1 — Fundamentos Agroclimáticos y Configuración del Entorno en R](../Images/sesion1_banner.png)
