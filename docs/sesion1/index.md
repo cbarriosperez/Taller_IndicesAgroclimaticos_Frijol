@@ -28,3 +28,20 @@ Al finalizar esta sesión, los participantes serán capaces de:
 - Definir y clasificar los principales indicadores agroclimáticos utilizados en cultivos de grano.
 - Tener un proyecto RStudio configurado con la estructura de carpetas del taller.
 - Instalar y cargar los paquetes de R necesarios para el flujo de trabajo.
+
+---
+
+## Presentación de la Sesión
+
+!!! info "Material de apoyo"
+    Puede navegar la presentación directamente en esta página. Si prefiere descargarla, use el enlace debajo del visor.
+
+<iframe
+  src="../Presentations/Barrios-Perez_Sesion1_Fundamentos%20agroclimaticos%20y%20configuracion%20del%20entorno%20en%20R.pdf"
+  width="100%"
+  height="650px"
+  style="border: 1px solid #cccccc; border-radius: 6px;">
+  Su navegador no admite la visualización de PDF en línea.
+</iframe>
+
+[📄 Descargar presentación (PDF)](../Presentations/Barrios-Perez_Sesion1_Fundamentos%20agroclimaticos%20y%20configuracion%20del%20entorno%20en%20R.pdf){ target="_blank" }
