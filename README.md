@@ -3,7 +3,7 @@
 [![Website Status](https://img.shields.io/badge/Website-Online-success?style=flat-square&logo=github)](https://cbarriosperez.github.io/Taller_IndicesAgroclimaticos_Frijol)
 [![GitHub Pages](https://img.shields.io/badge/Hosted_on-GitHub_Pages-blue?style=flat-square&logo=github)](#)
 
-Este repositorio contiene el código fuente y los materiales del sitio web desarrollado para el **Taller sobre Índices Agroclimáticos para el Cultivo de Frijol**. 
+Este repositorio centraliza toda la información, recursos y materiales utilizados en el **Taller sobre Índices Agroclimáticos para el Cultivo de Frijol**.
 
 🌐 **[Visitar el sitio web del taller aquí](https://cbarriosperez.github.io/Taller_IndicesAgroclimaticos_Frijol)**
 
