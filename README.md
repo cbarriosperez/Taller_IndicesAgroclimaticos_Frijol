@@ -20,14 +20,14 @@ A través de este material, los participantes del taller pueden acceder a concep
 - **Apoyar** la toma de decisiones agrícolas basadas en información climática.
 
 ## 📚 Contenido del Sitio Web
-El sitio está estructurado de la siguiente manera *(puedes editar esta sección según tu contenido real)*:
+El sitio está estructurado de la siguiente manera:
 1. **Introducción:** Conceptos básicos de agroclimatología y fenología del frijol.
 2. **Datos Climáticos:** Fuentes de información, descarga y procesamiento previo.
 3. **Cálculo de Índices:** Fórmulas y aplicación práctica de índices (térmicos, hídricos, etc.).
 4. **Visualización y Análisis:** Gráficos y mapeo de los resultados para una mejor interpretación.
 
 ## 👨‍💻 Autor
-Desarrollado y mantenido por **[Camilo Barrios-Pérez](https://github.com/cbarriosperez)**.
+Desarrollado y mantenido por **[Camilo Barrios-Pérez](https://github.com/cbarriosperez)** y **[Andres Aguilar](https://github.com/cbarriosperez)**.
 
 Si este taller o material te ha sido útil, ¡no dudes en darle una ⭐ al repositorio!
 
