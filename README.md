@@ -27,7 +27,7 @@ El sitio está estructurado de la siguiente manera:
 4. **Visualización y Análisis:** Gráficos y mapeo de los resultados para una mejor interpretación.
 
 ## 👨‍💻 Autor
-Desarrollado y mantenido por **[Camilo Barrios-Pérez](https://github.com/cbarriosperez)** y **[Andres Aguilar](https://github.com/cbarriosperez)**.
+Desarrollado y mantenido por **[Camilo Barrios-Pérez](https://github.com/cbarriosperez)** y **[Andres Aguilar](https://github.com/anaguilarar)**.
 
 Si este taller o material te ha sido útil, ¡no dudes en darle una ⭐ al repositorio!
 
