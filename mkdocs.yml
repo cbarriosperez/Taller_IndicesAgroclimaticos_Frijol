@@ -76,12 +76,7 @@ nav:
       - Marco Conceptual Agroclimático: sesion1/marco_conceptual.md
       - Indicadores Agroclimáticos — Conceptos Clave: sesion1/indicadores_conceptos.md
       - Configuración del Entorno en R: sesion1/configuracion_r.md
-  - Sesión 2 — Datos Climáticos y de Suelos:
-      - Introducción: sesion2/index.md
-      - Fuentes de Datos Climáticos y de Suelos: sesion2/clima_suelo.md
-      - Análisis Espacial en R: sesion2/lectura_datos.md
-      - Recorte y Organización Espacial: sesion2/recorte_organizacion.md
-      - Pipeline Reproducible: sesion2/pipeline.md
+  - Sesión 2 — Datos Climáticos y de Suelos: sesion2/index.md
   - Sesión 3 — Cálculo de Indicadores: sesion3/index.md
   - Sesión 4 — Mapas y Zonificación: sesion4/index.md
   - Referencias: referencias.md
