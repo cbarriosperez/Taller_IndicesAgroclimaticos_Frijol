@@ -103,7 +103,7 @@ soilgrids_propiedades_disponibles = c("cec", "bdod", "cfvo", "clay", "sand", "si
 soilgrids_profundidades = c("0-5cm", "5-15cm", "15-30cm", "30-60cm", "60-100cm", "100-200cm")
 
 # Función para descargar datos de precipitación CHIRPS versión 3.0
-descarga_chirps_v3 <- function(fechas, resolucion = "daily", extent_to_crop = NULL, output_dir = "outputs", parallelize = FALSE) {
+descarga_chirps_v3 <- function(fechas, resolucion = "daily", extent_to_crop = NULL, output_dir = "outputs", parallelize = FALSE, ncores = 3) {
   
   # Crear directorio de salida si no existe
   if (!dir.exists(output_dir)) {
@@ -213,7 +213,7 @@ descarga_chirps_v3 <- function(fechas, resolucion = "daily", extent_to_crop = NU
       message("Paquete 'parallel' no instalado. Realizando procesamiento de forma secuencial.")
       resultados <- mapply(process_file, urls, dest_files, MoreArgs = list(ext_vec = ext_num))
     } else {
-      cores_to_use <- max(1, parallel::detectCores() - 1)
+      cores_to_use <- max(1, ncores )
       cl <- parallel::makeCluster(cores_to_use)
       message(sprintf("Procesando en paralelo usando %d núcleos...", cores_to_use))
       resultados <- parallel::clusterMap(cl, process_file, urls, dest_files, MoreArgs = list(ext_vec = ext_num), SIMPLIFY = TRUE)
