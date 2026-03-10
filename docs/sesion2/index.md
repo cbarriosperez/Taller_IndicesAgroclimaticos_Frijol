@@ -14,8 +14,8 @@ En esta sesión los participantes aprenderán a leer, limpiar, cortar y organiza
 | Duración | Componente |
 |----------|-----------|
 | 30 min | [Introducción de conceptos de datos geoespaciales](lectura_datos.md) |
-| 30 min | [Descarga de datos climáticos y de suelos](clima_suelo.md) |
-| 60 min | Práctica |
+| 60 min | [Descarga de datos climáticos y de suelos](clima_suelo.md) |
+| 30 min | Práctica |
 
 ## Resultados de Aprendizaje
 

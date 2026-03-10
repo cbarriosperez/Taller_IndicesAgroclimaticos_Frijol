@@ -4,16 +4,10 @@
 
 Un pipeline reproducible garantiza que **cualquier colaborador** pueda ejecutar el mismo flujo y obtener los mismos resultados, independientemente del sistema operativo o la máquina.
 
-Principios clave:
-
-- **Rutas relativas**: usar el directorio del proyecto como raíz (`here::here()`).
-- **Scripts numerados**: `01_setup.R`, `02_datos_clima.R`, etc.
-- **Control de versiones**: git + GitHub/GitLab.
-- **Funciones reutilizables**: encapsular lógica repetitiva.
 
 ---
 
-## Script Maestro: `run_all.R`
+## Script:
 
 ```r
 # ============================================================

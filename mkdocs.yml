@@ -80,8 +80,6 @@ nav:
       - Introducción: sesion2/index.md
       - Introducción a Datos Geoespaciales: sesion2/lectura_datos.md
       - Descarga de Datos: sesion2/clima_suelo.md
-      - Recorte y Organización: sesion2/recorte_organizacion.md
-      - Práctica guiada: sesion2/pipeline.md
   - Sesión 3 — Cálculo de Indicadores: sesion3/index.md
   - Sesión 4 — Mapas y Zonificación: sesion4/index.md
   - Referencias: referencias.md
