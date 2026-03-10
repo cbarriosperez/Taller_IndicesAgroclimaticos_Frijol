@@ -211,24 +211,14 @@ En un flujo de trabajo típico, tenemos una variable continua global (raster) y 
 3. **Extracción Zonal (`extract`)**: Resume los píxeles que caen dentro del polígono utilizando una función estadística (media, mediana, suma). El resultado es un formato tabular listo para el análisis estadístico o visual.
 
 ```r
-# Creamos un polígono simulado (representando un municipio) dentro del área del raster
-poly_muni <- st_polygon(list(matrix(c(-75.2, 3.8, -74.8, 3.8, -74.8, 4.2, -75.2, 4.2, -75.2, 3.8), ncol=2, byrow=TRUE)))
-sf_municipio <- st_sf(Muni_ID = "Mun_01", geometry = st_sfc(poly_muni, crs = 4326))
 
-# Para usar el vector de sf en funciones de terra, lo convertimos a SpatVector
-vect_municipio <- vect(sf_municipio)
+rast_unidos = rast('outputs/raster_ejemplo.tif')
+puntos_con_depto = st_read('outputs/coordenadas_ejemplo_wgs84.shp')
 
-# 1. CROP: Corta el raster a la caja delimitadora del municipio
-precip_muni_crop <- crop(precip_acumulada, vect_municipio)
+terra::extract(rast_unidos, puntos_con_depto) ## warning
 
-# 2. MASK: Asigna NA a los píxeles fuera de la forma exacta del municipio
-precip_muni_mask <- mask(precip_muni_crop, vect_municipio)
+puntos_con_depto_planar = st_transform(puntos_con_depto, crs(rast_unidos))
 
-# 3. EXTRACCIÓN ZONAL: Calcular la precipitación media en el municipio
-# na.rm = TRUE es vital para ignorar los valores NA generados por el mask
-metricas_zonal <- extract(precip_muni_mask, vect_municipio, fun = mean, na.rm = TRUE)
+terra::extract(rast_unidos, puntos_con_depto_planar) 
 
-# Incorporamos el resultado al objeto sf original para mapeo o exportación
-sf_municipio$precip_media <- metricas_zonal[, 2] # Columna 2 contiene el cálculo
-print(sf_municipio)
 ```
