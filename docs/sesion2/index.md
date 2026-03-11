@@ -40,6 +40,6 @@ Al finalizar esta sesión, los participantes serán capaces de:
 
 ## Presentación de la Sesión
 
-[📥 Descargar presentación (PDF)](https://github.com/cbarriosperez/Taller_IndicesAgroclimaticos_Frijol/blob/main/docs/Presentations/Aguilar-Ariza_Sesion2_Procesamiento%20inicial%20de%20datos%20clim%C3%A1ticos%20y%20de%20suelos%20en%20R.pdf){ download }
+[📥 Descargar presentación (PDF)](https://github.com/cbarriosperez/Taller_IndicesAgroclimaticos_Frijol/raw/main/docs/Presentations/Aguilar-Ariza_Sesion2_Procesamiento%20inicial%20de%20datos%20clim%C3%A1ticos%20y%20de%20suelos%20en%20R.pdf){ download }
 
 <img src="../Images/sesion2_banner.png" alt="Sesion2-Procesamiento inicial de datos climáticos y de suelos en R" style="width: 25%; border-radius: 6px;">
