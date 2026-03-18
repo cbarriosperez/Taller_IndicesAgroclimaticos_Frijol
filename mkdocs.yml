@@ -76,7 +76,10 @@ nav:
       - Marco Conceptual Agroclimático: sesion1/marco_conceptual.md
       - Indicadores Agroclimáticos — Conceptos Clave: sesion1/indicadores_conceptos.md
       - Configuración del Entorno en R: sesion1/configuracion_r.md
-  - Sesión 2 — Datos Climáticos y de Suelos: sesion2/index.md
+  - Sesión 2 — Datos Climáticos y de Suelos:
+      - Introducción: sesion2/index.md
+      - Introducción a Datos Geoespaciales: sesion2/lectura_datos.md
+      - Descarga de Datos: sesion2/clima_suelo.md
   - Sesión 3 — Cálculo de Indicadores:
       - Introducción: sesion3/index.md
       - Práctica A — Indicadores Térmicos: sesion3/indicadores_termicos.md

@@ -68,43 +68,52 @@ Las operaciones espaciales entre geometrías generan nuevas formas basadas en la
 A continuación, implementaremos estas operaciones conceptuales en R.
 
 ```r
-# Cargar librerías
-library(sf)
-library(ggplot2)
+
 
 # 1. CREACIÓN Y LECTURA DE DATOS VECTORIALES
-# (En un caso real se usaría st_read("ruta/al/archivo.shp"))
-# Simularemos dos polígonos de áreas de estudio que se solapan parcialmente
-poly1 <- st_polygon(list(matrix(c(0,0, 2,0, 2,2, 0,2, 0,0), ncol=2, byrow=TRUE)))
-poly2 <- st_polygon(list(matrix(c(1,1, 3,1, 3,3, 1,3, 1,1), ncol=2, byrow=TRUE)))
 
-# Convertimos las geometrías en Simple Features (sf) asignándoles el CRS WGS84 (4326)
-cuenca_A <- st_sf(nombre = "Cuenca A", geometry = st_sfc(poly1, crs = 4326))
-cuenca_B <- st_sf(nombre = "Cuenca B", geometry = st_sfc(poly2, crs = 4326))
+## Trabajar con geometrías de polígonos
 
-# 2. TRANSFORMACIÓN DE CRS (Reproyección)
-# Transformamos a un sistema proyectado (ej. UTM Zona 18N - EPSG 32618)
-# Fundamental antes de calcular áreas o distancias métricas
-cuenca_A_utm <- st_transform(cuenca_A, crs = 32618)
+# Leer el shapefile de los departamentos de Honduras
+hnd_departamentos = st_read("datos_espaciales/geoBoundaries-HND-ADM1.shp")
 
-# 3. OPERACIONES ESPACIALES
-# Intersección: Área donde ambas cuencas se solapan
-interseccion <- st_intersection(cuenca_A, cuenca_B)
+hnd_departamentos
 
-# Unión: El área total combinada de ambas cuencas
-union_espacial <- st_union(cuenca_A, cuenca_B)
+# Graficar el mapa mostrando los nombres de los departamentos
+plot(hnd_departamentos['shapeName'])
 
-# Diferencia: Área exclusiva de la Cuenca A (que no pertenece a la B)
-diferencia <- st_difference(cuenca_A, cuenca_B)
 
-# Visualización rápida de la intersección usando ggplot2
+## Interacción entre puntos y polígonos
+
+# Realizar una intersección espacial: asignar la información del departamento a cada punto
+puntos_con_depto = st_intersection(puntos_sf, hnd_departamentos)
+
+# Guardar los puntos con la información del departamento en un GeoPackage
+st_write(puntos_con_depto, dsn = 'salidas/multiple_coordenadas_ejemplo_wgs84.gpkg', delete_layer = TRUE)
+
+# Cargar librería para visualización avanzada
+library(ggplot2)
+
+# Crear un mapa estético de Honduras con los puntos superpuestos
 ggplot() +
-  geom_sf(data = cuenca_A, fill = "blue", alpha = 0.3) +
-  geom_sf(data = cuenca_B, fill = "red", alpha = 0.3) +
-  geom_sf(data = interseccion, fill = "purple", size = 1.2) +
-  labs(title = "Intersección Espacial de Polígonos con sf",
-       subtitle = "La zona púrpura representa el área compartida") +
-  theme_minimal()
+  geom_sf(data = hnd_departamentos, fill = "white", color = "gray50") + # Capa base: departamentos
+  geom_sf(data = puntos_con_depto, aes(color = shapeName), size = 3) + # Capa superior: puntos extraídos
+  theme_minimal() + # Estilo limpio
+  labs(title = "Puntos extraídos por Departamento", # Título
+       color = "Departamento") # Leyenda
+
+
+## Operaciones con polígonos
+
+# Unir todos los polígonos de los departamentos en un solo polígono del país (disolver límites)
+pais = st_union(hnd_departamentos)
+
+# Exportar el nuevo polígono nacional como shapefile
+pais%>%
+  st_write('salidas/hnd.shp')
+# Graficar el límite nacional resultante
+plot(pais)
+
 ```
 
 
@@ -124,41 +133,73 @@ El manejo de raster implica tratar con matrices espaciales. En los datos climát
     La reproyección de un raster implica remuestrear los píxeles (crear nuevos valores basados en vecinos). En datos continuos (como la temperatura) se usa interpolación bilineal, mientras que en datos categóricos (tipo de suelo) se usa el vecino más cercano.
 
 ```r
-# Cargar librería para datos raster
-library(terra)
+# 2. CREACIÓN DE RASTER
+# Generar simulaciones de precipitación (distribución gamma) para 100 valores
+prec_sim1 = rgamma(100, 2, scale = 3)
+prec_sim2 = rgamma(100, 2, scale = 1)
 
-# 1. CREACIÓN / CARGA DE RASTER
-# Simulamos dos rasters que representan la precipitación mensual (Enero y Febrero)
-# En la práctica se usa: rast("ruta/al/archivo.tif")
-r_ene <- rast(nrows=100, ncols=100, xmin=-76, xmax=-74, ymin=3, ymax=5, crs="EPSG:4326")
-values(r_ene) <- runif(ncell(r_ene), min=50, max=150) # Lluvia simulada en mm
+# Convertir los valores simulados en matrices de 10x10
+prec_sim1_matrix = matrix(prec_sim1, nrow = 10, ncol = 10)
+prec_sim2_matrix = matrix(prec_sim2, nrow = 10, ncol = 10)
 
-r_feb <- rast(nrows=100, ncols=100, xmin=-76, xmax=-74, ymin=3, ymax=5, crs="EPSG:4326")
-values(r_feb) <- runif(ncell(r_feb), min=40, max=120)
+## Crear objetos raster
+library(terra) # Cargar el paquete terra para manejo de datos raster
 
-# 2. STACK / MULTILAYER
-# Apilamos las capas para formar un único objeto SpatRaster con múltiples bandas
-precip_stack <- c(r_ene, r_feb)
-names(precip_stack) <- c("Precip_Ene", "Precip_Feb")
+# Crear el primer raster a partir de la matriz 1
+rast_prec1 = rast(prec_sim1_matrix)
+plot(rast_prec1) # Visualizar
 
-# 3. OPERACIONES MATEMÁTICAS (Álgebra de Mapas)
-# Calcular la precipitación acumulada del bimestre (Suma píxel a píxel)
-precip_acumulada <- sum(precip_stack)
+# Crear el segundo raster a partir de la matriz 2
+rast_prec2 = rast(prec_sim2_matrix)
+plot(rast_prec2) # Visualizar
 
-# Multiplicación escalar (Ej. aplicar un factor de corrección del 5%)
-precip_corregida <- precip_acumulada * 1.05
+## Asignación de extensión espacial y coordenadas
 
-# 4. RECORTE (Crop) por Extensión
-# Definimos una extensión (xmin, xmax, ymin, ymax)
-ext_estudio <- ext(-75.5, -74.5, 3.5, 4.5)
-precip_recortada <- crop(precip_acumulada, ext_estudio)
+# Definir la resolución espacial en metros (ej. 1 km = 1000m)
+resolucion_espacial = 1000
+resolucion_espacial_x = 1000*10 # Tamaño total en X (10 celdas)
+resolucion_espacial_y = 1000*10 # Tamaño total en Y (10 celdas)
 
-# 5. REPROYECCIÓN (Cambio de CRS)
-# Reproyectamos a UTM. Usamos el método bilineal porque la precipitación es continua
-precip_utm <- project(precip_recortada, "EPSG:32618", method = "bilinear")
+## Propiedades espaciales
 
-# Visualización simple con base R plot para terra
-plot(precip_recortada, main="Precipitación Acumulada Recortada (mm)", col=mapa.colors(50))
+# Definir la extensión (Bounding Box) usando formato c(xmin, xmax, ymin, ymax)
+# Origen hipotético: X=490000, Y=1546000
+
+# Asignar la extensión calculada a los rasters
+ext(rast_prec1) = c(490000, 490000+resolucion_espacial_x, 1546000, 1546000 +resolucion_espacial_y)
+ext(rast_prec2) = c(490000, 490000+resolucion_espacial_x, 1546000, 1546000 +resolucion_espacial_y)
+
+# Asignar el sistema de coordenadas (CRS EPSG:32616, correspondiente a UTM Zona 16N)
+crs(rast_prec1) = "EPSG:32616"
+crs(rast_prec2) = "EPSG:32616"
+
+# Asignar atributos de tiempo a cada raster
+time(rast_prec1) <- as.Date("2026-04-01")
+time(rast_prec2) <- as.Date("2026-01-01")
+
+
+# Apilar (juntar) los rasters en un solo objeto con múltiples capas
+rast_unidos = c(rast_prec1, rast_prec2)
+rast_unidos # Inspeccionar el objeto apilado
+
+# Renombrar las capas del raster
+names(rast_unidos) = c('prec_abril', 'prec_enero')
+
+# Visualizar el stack completo
+plot(rast_unidos)
+
+# Operaciones matemáticas (Álgebra de mapas)
+# Calcular el promedio entre las capas
+rast_unidos[['promedio']] = mean(rast_unidos)
+# Calcular el valor acumulado (suma) de las capas
+rast_unidos[['acumulado']] = sum(rast_unidos)
+
+# Visualizar los resultados incluyendo las nuevas capas calculadas
+plot(rast_unidos)
+
+# Guardar el raster resultante en el disco (en formato .tif)
+terra::writeRaster(rast_unidos, 'salidas/raster_ejemplo.tif')
+
 ```
 
 ### Manejo de datos combinando raster y vector
@@ -170,24 +211,14 @@ En un flujo de trabajo típico, tenemos una variable continua global (raster) y 
 3. **Extracción Zonal (`extract`)**: Resume los píxeles que caen dentro del polígono utilizando una función estadística (media, mediana, suma). El resultado es un formato tabular listo para el análisis estadístico o visual.
 
 ```r
-# Creamos un polígono simulado (representando un municipio) dentro del área del raster
-poly_muni <- st_polygon(list(matrix(c(-75.2, 3.8, -74.8, 3.8, -74.8, 4.2, -75.2, 4.2, -75.2, 3.8), ncol=2, byrow=TRUE)))
-sf_municipio <- st_sf(Muni_ID = "Mun_01", geometry = st_sfc(poly_muni, crs = 4326))
 
-# Para usar el vector de sf en funciones de terra, lo convertimos a SpatVector
-vect_municipio <- vect(sf_municipio)
+rast_unidos = rast('outputs/raster_ejemplo.tif')
+puntos_con_depto = st_read('outputs/coordenadas_ejemplo_wgs84.shp')
 
-# 1. CROP: Corta el raster a la caja delimitadora del municipio
-precip_muni_crop <- crop(precip_acumulada, vect_municipio)
+terra::extract(rast_unidos, puntos_con_depto) ## warning
 
-# 2. MASK: Asigna NA a los píxeles fuera de la forma exacta del municipio
-precip_muni_mask <- mask(precip_muni_crop, vect_municipio)
+puntos_con_depto_planar = st_transform(puntos_con_depto, crs(rast_unidos))
 
-# 3. EXTRACCIÓN ZONAL: Calcular la precipitación media en el municipio
-# na.rm = TRUE es vital para ignorar los valores NA generados por el mask
-metricas_zonal <- extract(precip_muni_mask, vect_municipio, fun = mean, na.rm = TRUE)
+terra::extract(rast_unidos, puntos_con_depto_planar) 
 
-# Incorporamos el resultado al objeto sf original para mapeo o exportación
-sf_municipio$precip_media <- metricas_zonal[, 2] # Columna 2 contiene el cálculo
-print(sf_municipio)
 ```

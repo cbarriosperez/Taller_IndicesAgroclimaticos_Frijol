@@ -1,12 +1,45 @@
 # Sesión 2: Procesamiento Inicial de Datos Climáticos y de Suelos en R
 
-<div style="text-align: center; padding: 48px 24px;">
-  <div style="font-size: 64px; margin-bottom: 16px;">🔒</div>
-  <h2 style="color: #555; font-weight: 600;">Sesión no disponible aún</h2>
-  <p style="color: #777; font-size: 1.05rem; max-width: 480px; margin: 0 auto;">
-    Esta sesión se habilitará el <strong>miércoles 11 de marzo</strong>
-    a partir de las <strong>9:00 am</strong> (hora Honduras).<br><br>
-    Por ahora continúe revisando el material de la
-    <a href="https://cbarriosperez.github.io/Taller_IndicesAgroclimaticos_Frijol/sesion1/">Sesión 1</a>.
-  </p>
-</div>
+**Fecha:** Miércoles 11 de marzo · 9:00 – 11:00 am (hora Honduras)  
+**Duración:** 2 horas
+
+---
+
+## Descripción General
+
+En esta sesión los participantes aprenderán a leer, limpiar, cortar y organizar datos climáticos raster y datos de suelos para Honduras. El resultado será un **pipeline reproducible** que deja los datos listos para calcular los indicadores en la Sesión 3.
+
+## Agenda (120 minutos)
+
+| Duración | Componente |
+|----------|-----------|
+| 30 min | [Introducción de conceptos de datos geoespaciales](lectura_datos.md) |
+| 60 min | [Descarga de datos climáticos y de suelos](clima_suelo.md) |
+| 30 min | Práctica |
+
+## Resultados de Aprendizaje
+
+Al finalizar esta sesión, los participantes serán capaces de:
+
+- Leer rasters climáticos (WorldClim, CHIRPS, ERA5) y datos vectoriales en R usando `terra` y `sf`.
+- Reproyectar, recortar y enmascarar rasters al área de estudio (Honduras).
+- Organizar y guardar datos procesados en formato GeoTIFF estándar.
+- Construir un pipeline de R reproducible para la preparación de datos.
+
+
+## Requisitos Previos
+
+!!! warning "Requisitos técnicos"
+    Para sacar el máximo provecho del taller se recomienda:
+
+    - Cuenta creada en [Copernicus Data Store](https://cds.climate.copernicus.eu/datasets/sis-agrometeorological-indicators?tab=overview)
+    - Descarga de insumos de la [sesion 2 ](https://drive.google.com/drive/folders/1U_lgC-TuKmmhJJCfv7ThsWzlur4fT9As?usp=drive_link)
+    - Descarga de [QGIS](https://qgis.org/download/) 
+
+---
+
+## Presentación de la Sesión
+
+[📥 Descargar presentación (PDF)](https://github.com/cbarriosperez/Taller_IndicesAgroclimaticos_Frijol/raw/main/docs/Presentations/Aguilar-Ariza_Sesion2_Procesamiento%20inicial%20de%20datos%20clim%C3%A1ticos%20y%20de%20suelos%20en%20R.pdf){ download }
+
+<img src="../Images/sesion2_banner.png" alt="Sesion2-Procesamiento inicial de datos climáticos y de suelos en R" style="width: 25%; border-radius: 6px;">
