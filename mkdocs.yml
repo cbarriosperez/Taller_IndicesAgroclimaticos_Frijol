@@ -77,7 +77,10 @@ nav:
       - Indicadores Agroclimáticos — Conceptos Clave: sesion1/indicadores_conceptos.md
       - Configuración del Entorno en R: sesion1/configuracion_r.md
   - Sesión 2 — Datos Climáticos y de Suelos: sesion2/index.md
-  - Sesión 3 — Cálculo de Indicadores: sesion3/index.md
+  - Sesión 3 — Cálculo de Indicadores:
+      - Introducción: sesion3/index.md
+      - Práctica A — Indicadores Térmicos: sesion3/indicadores_termicos.md
+      - Práctica B — Indicadores Hídricos: sesion3/indicadores_hidricos.md
   - Sesión 4 — Mapas y Zonificación: sesion4/index.md
   - Referencias: referencias.md
 
