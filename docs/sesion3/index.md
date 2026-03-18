@@ -45,3 +45,12 @@ Al finalizar esta sesión, los participantes serán capaces de:
 - Estimar la evapotranspiración de referencia (ET₀) con el método de Hargreaves-Samani.
 - Derivar el déficit hídrico acumulado (WHD) y días secos consecutivos (CDD) para el ciclo de primera.
 - Interpretar los indicadores calculados en el contexto del mejoramiento y manejo del frijol en Honduras.
+
+---
+
+## Requisitos Previos
+
+!!! warning "Descarga de insumos"
+    Antes de iniciar la sesión, descarga los archivos necesarios desde Google Drive:
+
+    - Descarga de insumos de la [sesión 3](https://drive.google.com/drive/folders/1smV5y2yYjVXtYq1HwWYaYO5YzdwIndoy?usp=drive_link)
