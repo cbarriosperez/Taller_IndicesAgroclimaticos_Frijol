@@ -5,91 +5,155 @@
 La **estadística zonal** permite resumir los indicadores agroclimáticos (expresados como rasters) a unidades administrativas (municipios, departamentos o zonas productoras definidas por el programa de mejoramiento).
 
 ```r
-# ============================================================
-# Script: 06_mapas_tpe.R
-# Sesión 4 — Estadística zonal y productos finales
-# ============================================================
-library(terra)
-library(sf)
-library(tidyverse)
-library(here)
-source(here("scripts", "utils.R"))
+# ==============================================================================
+# MÓDULO: CARACTERIZACIÓN Y SÍNTESIS DE AMBIENTES (TPE)
+# Objetivo: Analizar estadísticamente y visualizar las diferencias entre los
+#           clústeres generados para definir la Población Objetivo de Entornos.
+# ==============================================================================
 
-# ── Cargar indicadores calculados --------------------------
-gdd_r      <- rast(here("outputs","mapas","gdd_primera_honduras.tif"))
-dttf_r     <- rast(here("outputs","mapas","dttf_floracion_honduras.tif"))
-tmin_ll_r  <- rast(here("outputs","mapas","tmin_llenado_honduras.tif"))
-etc_r      <- rast(here("outputs","mapas","etc_total_primera_honduras.tif"))
-whd_r      <- rast(here("outputs","mapas","whd_total_primera_honduras.tif"))
-cdd_r      <- rast(here("outputs","mapas","cdd_mayo_honduras.tif"))
+# --- 1. CONFIGURACIÓN INICIAL ---
 
-# Stack de todos los indicadores
-indicadores_stack <- c(gdd_r, dttf_r, tmin_ll_r, etc_r, whd_r, cdd_r)
-names(indicadores_stack) <- c("GDD_primera","DTTF_floracion",
-                               "Tmin_llenado","ETc_total",
-                               "WHD_total","CDD_mayo")
+# Limpiar memoria para asegurar una ejecución desde cero
+rm(list = ls())
 
-# ── Cargar polígonos municipales ---------------------------
-hon_mun <- vect(here("data","admin","gadm41_HND_2.shp"))
+# Cargar funciones auxiliares desde GitHub (Pipeline reproducible)
+source(
+  paste0(
+    "https://raw.githubusercontent.com/cbarriosperez/Taller_IndicesAgroclimaticos_Frijol/main/scripts//", 
+    "main_session2.R"
+  )
+)
 
-# ── Estadística zonal por municipio -----------------------
-fns <- c("mean", "sd", "min", "max")
+# Cargar librerías esenciales
+library(sf)         # Manejo de vectores
+library(terra)      # Procesamiento raster (clima y suelo)
+library(factoextra) # Visualización de algoritmos de clustering
+library(tidyverse)  # Manipulación de datos y visualización (ggplot2)
 
-tabla_zonal <- lapply(fns, function(fn) {
-  z <- zonal(indicadores_stack, hon_mun, fun = fn, na.rm = TRUE)
-  colnames(z) <- paste0(names(indicadores_stack), "_", fn)
-  return(z)
-}) |> bind_cols()
+# --- 2. CARGA DE RESULTADOS PREVIOS ---
 
-# Agregar atributos del municipio
-info_mun <- as.data.frame(hon_mun[, c("GID_1","NAME_1","GID_2","NAME_2")])
-tabla_final <- bind_cols(info_mun, tabla_zonal) |>
-  rename(depto = NAME_1, municipio = NAME_2) |>
-  arrange(depto, municipio)
+# Leer el stack edafoclimático procesado (NetCDF guardado en pasos anteriores)
+dep_cov = rast("outputs/edafoclimatica_olancho.nc")
 
-# ── Guardar tabla completa --------------------------------
-write.csv(tabla_final, 
-          here("outputs","tablas","indicadores_agroclimaticos_municipios_honduras.csv"),
-          row.names = FALSE)
+# Leer el mapa de clústeres generado (Zonificación final)
+mapa_cluster = rast("outputs/cluster_4.tif")
 
-cat("Tabla guardada:", nrow(tabla_final), "municipios ×", ncol(tabla_final), "variables\n")
+# --- 3. ESTADÍSTICA ZONAL: CARACTERIZACIÓN DE LOS TPE ---
+
+# Calcular el valor promedio de cada variable original para cada clúster
+# Esto nos permite saber "qué significa" cada número de clúster (ej. seco vs húmedo)
+perfil_tpe <- zonal(x = dep_cov, 
+                    z = mapa_cluster, 
+                    fun = "mean", 
+                    na.rm = TRUE)
+
+print(perfil_tpe)
+
+# --- 4. PREPARACIÓN DE DATOS PARA VISUALIZACIÓN ---
+
+# Convertir tabla de formato ancho (wide) a largo (long) para facilitar el uso de ggplot2
+perfil_long <- perfil_tpe %>%
+  as.data.frame() %>%
+  pivot_longer(cols = -cluster,      # Mantener columna cluster
+               names_to = "Variable", 
+               values_to = "Valor") %>%
+  mutate(TPE_Cluster = as.factor(cluster))
+
+# --- 5. GRÁFICO 1: PERFILES PROMEDIO POR CLÚSTER ---
+
+# Este gráfico permite comparar la "firma" de cada ambiente en todas las variables
+ggplot(perfil_long, aes(x = TPE_Cluster, y = Valor, fill = TPE_Cluster)) +
+  geom_col(alpha = 0.8, color = "black") +
+  # Usar escalas independientes (free_y) ya que pH, Arcilla y Lluvia tienen unidades distintas
+  facet_wrap(~Variable, scales = "free_y") + 
+  scale_fill_brewer(palette = "Set2") +
+  theme_minimal() +
+  labs(title = "Perfil Ambiental por Clúster (TPE)",
+       subtitle = "Promedios zonales de variables climáticas y de suelo",
+       x = "Clúster",
+       y = "Valor Promedio") +
+  theme(legend.position = "none",
+        strip.text = element_text(face = "bold", size = 12))
+
+# --- 6. GRÁFICO 2: ANÁLISIS DE VARIABILIDAD INTERNA (BOXPLOTS) ---
+
+# Extraer una muestra aleatoria de 1,000 píxeles para visualizar la dispersión real
+# Útil para ver qué tan "puros" o variables son nuestros clústeres
+puntos_muestreados <- spatSample(c(dep_cov, mapa_cluster), 
+                                 size = 1000, 
+                                 method = "random", 
+                                 na.rm = TRUE, 
+                                 as.df = TRUE) %>%
+  rename(TPE = cluster) %>% # Cambiar nombre para claridad visual
+  pivot_longer(cols = -TPE)
+
+ggplot(puntos_muestreados, aes(x = as.factor(TPE), y = value, fill = as.factor(TPE))) +
+  geom_boxplot(alpha = 0.7, outlier.shape = NA) + # Ocultar outliers para limpiar visual
+  geom_jitter(width = 0.2, alpha = 0.1, size = 0.5) + # Añadir puntos para ver densidad
+  facet_wrap(~name, scales = "free_y") +
+  scale_fill_viridis_d(option = "mako", name = "TPE") +
+  theme_bw() +
+  labs(title = "Variabilidad Interna de los Mega-Ambientes (TPE)",
+       subtitle = "Análisis de distribución de píxeles por clúster (Muestra n=5000)",
+       x = "Clúster", y = "Valor de la Variable")
+
+# --- 7. SÍNTESIS DE RESULTADOS (AGREGACIÓN FINAL) ---
+
+# Crear indicadores climáticos anuales para simplificar la toma de decisiones
+perfil_tpe_tipo = perfil_tpe %>%
+  as.data.frame() %>%
+  mutate(
+    # Acumular los 12 meses de precipitación en un total anual
+    Prec_Acumulada = rowSums(select(., contains("precipitacion"))),
+    # Promediar las temperaturas si existieran en el stack (ej. AgERA5)
+    Temp_Promedio = rowMeans(select(., contains("temperatura"))) 
+  )
+perfil_resumen <- perfil_tpe_tipo %>%
+  # Seleccionar variables clave para la recomendación agronómica
+  select(cluster, arcilla, arena, nitrogeno, ph, pmm, cc, Prec_Acumulada, Temp_Promedio) %>%
+  pivot_longer(cols = -cluster, names_to = "Variable", values_to = "Valor") %>%
+  # Clasificar variables por grupo para una visualización organizada
+  mutate(Grupo = case_when(
+    Variable == "Prec_Acumulada" ~ "Clima (Anual)",
+    Variable == "Temp_Promedio" ~ "Temperatura (Anual)",
+    TRUE ~ "Propiedades de Suelo"
+  ),
+  TPE_Cluster = as.factor(cluster))
+
+# --- 8. GRÁFICO 3: SÍNTESIS AGROCLIMÁTICA PARA MEJORAMIENTO ---
+
+# Visualización simplificada: Ideal para presentar a fitomejoradores
+ggplot(perfil_resumen, aes(x = TPE_Cluster, y = Valor, fill = TPE_Cluster)) +
+  geom_col(alpha = 0.8, color = "black") +
+  # El uso de escalas libres por faceta permite comparar peras con manzanas
+  facet_wrap(~Variable, scales = "free_y") + 
+  scale_fill_brewer(palette = "Set2") +
+  theme_minimal() +
+  labs(title = "Síntesis del Perfil Ambiental por Clúster",
+       subtitle = "Resumen de factores limitantes y oferta hídrica anual",
+       x = "Clúster (TPE)",
+       y = "Valor Promedio") +
+  theme(legend.position = "none",
+        strip.text = element_text(face = "bold", size = 10))
+
+
+perfil_tpe_grupo <- perfil_long %>%
+  mutate(Tipo = if_else(str_detect(Variable, "precipitacion"), "Precipitacion", if_else(str_detect(Variable, "temperatura"),"Temperatura","Suelo")))
+         
+perfil_tpe_grupo
+
+ggplot(perfil_tpe_grupo%>%
+         filter(Tipo == 'Precipitacion'), aes(x = TPE_Cluster, y = Valor, fill = TPE_Cluster)) +
+  geom_col(alpha = 0.8, color = "black") +
+  # Usar escalas independientes (free_y) ya que pH, Arcilla y Lluvia tienen unidades distintas
+  facet_wrap(~Variable, scales = "free_y") + 
+  scale_fill_brewer(palette = "Set2") +
+  theme_minimal() +
+  labs(title = "Perfil Ambiental por Clúster (TPE)",
+       subtitle = "Precipitación acumulada mensual",
+       x = "Clúster",
+       y = "") +
+  theme(legend.position = "none",
+        strip.text = element_text(face = "bold", size = 12))
+
 ```
-
----
-
-## Visualización Tabular con `kableExtra`
-
-```r
-library(knitr)
-library(kableExtra)
-
-# Seleccionar columnas clave para presentación
-tabla_resumen <- tabla_final |>
-  select(depto, municipio,
-         GDD_primera_mean, DTTF_floracion_mean, 
-         Tmin_llenado_mean, WHD_total_mean) |>
-  mutate(across(where(is.numeric), ~round(.x, 1)))
-
-kable(tabla_resumen,
-      col.names = c("Departamento","Municipio",
-                    "GDD (°C·día)","DTTF (días)",
-                    "Tmin llenado (°C)","WHD (mm)"),
-      caption = "Indicadores agroclimáticos por municipio — Ciclo Primera, Honduras") |>
-  kable_styling(bootstrap_options = c("striped","hover","condensed"),
-                font_size = 12, full_width = FALSE) |>
-  column_spec(4, color = ifelse(tabla_resumen$DTTF_floracion_mean > 5, "red", "black"),
-              bold = ifelse(tabla_resumen$DTTF_floracion_mean > 5, TRUE, FALSE)) |>
-  column_spec(6, color = ifelse(tabla_resumen$WHD_total_mean > 150, "red", "black"))
-```
-
----
-
-## Interpretación de la Tabla de Indicadores
-
-| Indicador | Rango bajo (favorable) | Rango medio (tolerable) | Rango alto (riesgo severo) |
-|-----------|------------------------|-------------------------|---------------------------|
-| GDD (°C·día) | > 1 200 | 900 – 1 200 | < 900 |
-| DTTF (días) | < 3 | 3 – 7 | > 7 |
-| Tmin llenado (°C) | < 18 | 18 – 20 | > 20 |
-| WHD total (mm) | < 80 | 80 – 150 | > 150 |
-| CDD mayo (días) | < 8 | 8 – 14 | > 14 |
