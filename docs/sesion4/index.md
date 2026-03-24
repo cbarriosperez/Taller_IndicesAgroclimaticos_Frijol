@@ -56,3 +56,8 @@ Al finalizar esta sesión, los participantes serán capaces de:
 
 ---
 
+## Presentación de la Sesión
+
+[📥 Descargar presentación (PDF)](https://github.com/cbarriosperez/Taller_IndicesAgroclimaticos_Frijol/raw/main/docs/Presentations/Sesion4_Zonificacion%20en%20R.pdf){ download }
+
+<img src="../Images/sesion2_banner.png" alt="Sesion4-Zonificacion en R" style="width: 25%; border-radius: 6px;">
