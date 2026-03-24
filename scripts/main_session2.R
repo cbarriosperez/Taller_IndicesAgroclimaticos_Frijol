@@ -285,3 +285,90 @@ crear_capa_promedio_de_profundidad = function(propiedad,
   
   return(raster_promedio)
 }
+
+
+descargar_agera5_anual <- function(year, variable, meses, credenciales, extension_pais, output_dir, statistic = NULL) {
+  
+  # 1. Definición de Sufijos (Variables)
+  if(variable == "2m_temperature") {
+    if (is.null(statistic)) statistic = "24_hour_mean"
+    if (statistic == "24_hour_mean") suffix = 'temp_mean'
+  } else {
+    # Por seguridad, si usan otra variable (ej. precipitación)
+    suffix = variable 
+  }
+  
+  # 2. Preparar directorios
+  dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
+  
+  # Directorio temporal exclusivo para este año
+  temp_dir <- file.path(output_dir, paste0(suffix, "_", year))
+  dir.create(temp_dir, showWarnings = FALSE, recursive = TRUE)
+  
+  # Días posibles (Copernicus ignora automáticamente el 30/31 de febrero)
+  dias_todos <- sprintf("%02d", 1:31) 
+  
+  message(sprintf("\n=== Iniciando descarga por meses para el año: %s ===", year))
+  
+  # 3. BUCLE MES A MES
+  for (mes in meses) {
+    message(paste(" -> Solicitando mes:", mes, "del año:", year))
+    
+    target_mes <- paste0(suffix, '_agera5_', year, '_', mes, '.zip')
+    
+    tmpera5_request <- list(
+      dataset_short_name = "sis-agrometeorological-indicators",
+      variable = variable, 
+      statistic = statistic, 
+      year = as.character(year),
+      month = mes,                 # ¡PIDE SOLO UN MES!
+      day = dias_todos,
+      version = '2_0',
+      area = c(extension_pais[4], extension_pais[1], extension_pais[3], extension_pais[2]),
+      format = "zip",
+      target = target_mes
+    )
+    
+    # a. Descargar el archivo mensual en la carpeta temporal
+    wf_request(user = credenciales$email, 
+               request = tmpera5_request, 
+               transfer = TRUE, 
+               path = temp_dir)
+    
+    # b. Descomprimir el mes recién descargado
+    ruta_zip_mes <- file.path(temp_dir, target_mes)
+    unzip(zipfile = ruta_zip_mes, exdir = temp_dir)
+    
+    # c. Eliminar el .zip mensual para no saturar el disco duro
+    file.remove(ruta_zip_mes)
+  }
+  
+  # 4. EMPAQUETADO FINAL DEL AÑO
+  message("\nEmpaquetando todos los meses en un solo archivo ZIP anual...")
+  
+  target_anual <- paste0(suffix, '_agera5_', year, '.zip')
+  ruta_zip_anual_absoluta <- normalizePath(file.path(output_dir, target_anual), mustWork = FALSE)
+  
+  # Listar todos los archivos NetCDF/TIF extraídos en la carpeta temporal
+  archivos_extraidos <- list.files(temp_dir, full.names = TRUE)
+  
+  # TRUCO PRO: Cambiamos temporalmente el directorio de trabajo a la carpeta temp.
+  # Esto evita que el archivo .zip final guarde carpetas anidadas largas (C:/Users/...)
+  wd_original <- getwd()
+  setwd(temp_dir)
+  
+  # Crear el gran zip anual
+  zip::zipr(ruta_zip_anual_absoluta, files = archivos_extraidos)
+
+  print(ruta_zip_anual_absoluta)
+  # Volver al directorio original de trabajo
+  setwd(wd_original)
+  
+  # 5. LIMPIEZA
+  # Borramos la carpeta temporal y todo su contenido
+  
+  unlink(temp_dir, recursive = TRUE)
+  
+  message(paste("¡Año", year, "completado exitosamente! Archivo final guardado en:", output_dir))
+  return(paste("Año", year, "completado exitosamente."))
+}
