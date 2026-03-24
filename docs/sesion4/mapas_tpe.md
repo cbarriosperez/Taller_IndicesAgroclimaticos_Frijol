@@ -1,12 +1,17 @@
 # Construcción de Mapas Agroclimáticos y Clasificación de Ambientes (TPE)
 
+Hasta ahora, hemos aprendido a procesar datos climáticos (CHIRPS/AgERA5) y de suelo (SoilGrids) por separado. Sin embargo, en el mundo real, la variabilidad espacial conjunta de las variables de suelo y clima ofrece la oportunidad de delimitar zonas edafoclimáticas contiguas. Estas zonas son fundamentales para mejorar el manejo de los recursos naturales.
+
 ## Mapas de Indicadores Agroclimáticos
 
-Los mapas finales deben cumplir estándares cartográficos mínimos: título, leyenda, escala y fuente de datos.
+La pregunta ahora es: ¿Cómo delimitamos matemáticamente estas zonas (TPEs) en R usando nuestros mapas? Como no sabemos a priori dónde están las fronteras exactas de estos agroecosistemas, estamos frente a un problema clásico de **Aprendizaje No Supervisado (Unsupervised Learning)**.
+
+Para ello, usaremos el algoritmo de [**K-Means Clustering**](https://medium.com/@abhaysingh71711/k-means-clustering-a-deep-dive-into-unsupervised-learning-81213f56cfc9)  Le pediremos a R que tome las capas creadad en Honduras y, basándose en la "distancia matemática" entre sus valores, los agrupe de forma automática en ambientes homogéneos.
+
 
 ```r
 # ============================================================
-# Mapas cartográficos de indicadores clave
+# Zonificación Edafo-Climática
 # ============================================================
 library(terra)
 library(ggplot2)
