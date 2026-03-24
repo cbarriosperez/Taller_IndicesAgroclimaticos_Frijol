@@ -352,18 +352,12 @@ descargar_agera5_anual <- function(year, variable, meses, credenciales, extensio
   # Listar todos los archivos NetCDF/TIF extraídos en la carpeta temporal
   archivos_extraidos <- list.files(temp_dir, full.names = TRUE)
   
-  # TRUCO PRO: Cambiamos temporalmente el directorio de trabajo a la carpeta temp.
-  # Esto evita que el archivo .zip final guarde carpetas anidadas largas (C:/Users/...)
-  wd_original <- getwd()
-  setwd(temp_dir)
-  
   # Crear el gran zip anual
   zip::zipr(ruta_zip_anual_absoluta, files = archivos_extraidos)
 
   print(ruta_zip_anual_absoluta)
   # Volver al directorio original de trabajo
-  setwd(wd_original)
-  
+    
   # 5. LIMPIEZA
   # Borramos la carpeta temporal y todo su contenido
   
