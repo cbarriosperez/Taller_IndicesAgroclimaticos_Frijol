@@ -235,3 +235,53 @@ descarga_chirps_v3 <- function(fechas, resolucion = "daily", extent_to_crop = NU
     return(archivos_exitosos)
   }
 }
+
+
+crear_capa_promedio_de_profundidad = function(propiedad, 
+                                              sfvector, 
+                                              profundidad_max = '30cm', 
+                                              output_dir = 'data/suelo', 
+                                              mask = TRUE) {
+  
+  # 1. Definir los espesores (weights) de las capas estándar de SoilGrids en cm
+  # (0-5, 5-15, 15-30, 30-60, 60-100, 100-200)
+  depths = c(5, 10, 15, 30, 40, 100)
+  soilgrids_profundidades = c("0-5cm", "5-15cm", "15-30cm", "30-60cm", "60-100cm", "100-200cm")
+
+  # 2. Encontrar el índice 'n' que corresponde a la profundidad máxima deseada
+  # Se usa which() combinado con str_detect() para hacerlo más robusto y rápido que el lapply original
+  n = which(stringr::str_detect(soilgrids_profundidades, profundidad_max))
+  
+  # 3. Descargar y ponderar las capas
+  # Descargamos desde la capa 1 hasta la capa 'n', multiplicando cada raster por su espesor
+  data_layers = lapply(1:n, function(x) {
+    raster_descargado = descarga_soilgrids(
+      sfvector, 
+      variable = propiedad, 
+      depth = soilgrids_profundidades[x], 
+      output_dir = output_dir  # Corregido: Ahora usa el argumento
+    )
+    
+    # Ponderación: Multiplicamos el raster por el grosor de esa capa específica
+    return(raster_descargado * depths[x])
+  })
+  
+
+  # 4. Calcular el promedio ponderado final
+  # Sumamos todas las capas ponderadas y dividimos por la suma total de los espesores
+  raster_sumado = sum(terra::rast(data_layers), na.rm = TRUE)
+  profundidad_total = sum(depths[1:n])
+  
+  raster_promedio = raster_sumado / profundidad_total
+  
+  # 5. Aplicar máscara si el usuario lo requiere
+  if (mask) {
+    raster_promedio = cortar_raster_usando_vector(
+      raster_src = raster_promedio, 
+      sfvector = sfvector, 
+      mask = TRUE
+    )
+  }
+  
+  return(raster_promedio)
+}
