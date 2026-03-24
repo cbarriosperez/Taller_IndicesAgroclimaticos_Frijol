@@ -10,7 +10,7 @@
 Todos los archivos de datos, scripts y recursos necesarios para esta sesión están disponibles en Google Drive:
 
 <div style="text-align: center; margin: 24px 0;">
-  <a href="https://drive.google.com/drive/folders/1smV5y2yYjVXtYq1HwWYaYO5YzdwIndoy?usp=drive_link"
+  <a href="https://drive.google.com/drive/folders/1U_lgC-TuKmmhJJCfv7ThsWzlur4fT9As?usp=drive_link"
      target="_blank"
      style="display: inline-flex; align-items: center; gap: 10px;
             background: #1a73e8; color: white; font-weight: 600;
