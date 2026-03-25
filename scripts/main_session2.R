@@ -235,3 +235,134 @@ descarga_chirps_v3 <- function(fechas, resolucion = "daily", extent_to_crop = NU
     return(archivos_exitosos)
   }
 }
+
+
+crear_capa_promedio_de_profundidad = function(propiedad, 
+                                              sfvector, 
+                                              profundidad_max = '30cm', 
+                                              output_dir = 'data/suelo', 
+                                              mask = TRUE) {
+  
+  # 1. Definir los espesores (weights) de las capas estándar de SoilGrids en cm
+  # (0-5, 5-15, 15-30, 30-60, 60-100, 100-200)
+  depths = c(5, 10, 15, 30, 40, 100)
+  soilgrids_profundidades = c("0-5cm", "5-15cm", "15-30cm", "30-60cm", "60-100cm", "100-200cm")
+
+  # 2. Encontrar el índice 'n' que corresponde a la profundidad máxima deseada
+  # Se usa which() combinado con str_detect() para hacerlo más robusto y rápido que el lapply original
+  n = which(stringr::str_detect(soilgrids_profundidades, profundidad_max))
+  
+  # 3. Descargar y ponderar las capas
+  # Descargamos desde la capa 1 hasta la capa 'n', multiplicando cada raster por su espesor
+  data_layers = lapply(1:n, function(x) {
+    raster_descargado = descarga_soilgrids(
+      sfvector, 
+      variable = propiedad, 
+      depth = soilgrids_profundidades[x], 
+      output_dir = output_dir  # Corregido: Ahora usa el argumento
+    )
+    
+    # Ponderación: Multiplicamos el raster por el grosor de esa capa específica
+    return(raster_descargado * depths[x])
+  })
+  
+
+  # 4. Calcular el promedio ponderado final
+  # Sumamos todas las capas ponderadas y dividimos por la suma total de los espesores
+  raster_sumado = sum(terra::rast(data_layers), na.rm = TRUE)
+  profundidad_total = sum(depths[1:n])
+  
+  raster_promedio = raster_sumado / profundidad_total
+  
+  # 5. Aplicar máscara si el usuario lo requiere
+  if (mask) {
+    raster_promedio = cortar_raster_usando_vector(
+      raster_src = raster_promedio, 
+      sfvector = sfvector, 
+      mask = TRUE
+    )
+  }
+  
+  return(raster_promedio)
+}
+
+
+descargar_agera5_anual <- function(year, variable, meses, credenciales, extension_pais, output_dir, statistic = NULL) {
+  
+  # 1. Definición de Sufijos (Variables)
+  if(variable == "2m_temperature") {
+    if (is.null(statistic)) statistic = "24_hour_mean"
+    if (statistic == "24_hour_mean") suffix = 'temp_mean'
+  } else {
+    # Por seguridad, si usan otra variable (ej. precipitación)
+    suffix = variable 
+  }
+  
+  # 2. Preparar directorios
+  dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
+  
+  # Directorio temporal exclusivo para este año
+  temp_dir <- file.path(output_dir, paste0(suffix, "_", year))
+  dir.create(temp_dir, showWarnings = FALSE, recursive = TRUE)
+  
+  # Días posibles (Copernicus ignora automáticamente el 30/31 de febrero)
+  dias_todos <- sprintf("%02d", 1:31) 
+  
+  message(sprintf("\n=== Iniciando descarga por meses para el año: %s ===", year))
+  
+  # 3. BUCLE MES A MES
+  for (mes in meses) {
+    message(paste(" -> Solicitando mes:", mes, "del año:", year))
+    
+    target_mes <- paste0(suffix, '_agera5_', year, '_', mes, '.zip')
+    
+    tmpera5_request <- list(
+      dataset_short_name = "sis-agrometeorological-indicators",
+      variable = variable, 
+      statistic = statistic, 
+      year = as.character(year),
+      month = mes,                 # ¡PIDE SOLO UN MES!
+      day = dias_todos,
+      version = '2_0',
+      area = c(extension_pais[4], extension_pais[1], extension_pais[3], extension_pais[2]),
+      format = "zip",
+      target = target_mes
+    )
+    
+    # a. Descargar el archivo mensual en la carpeta temporal
+    wf_request(user = credenciales$email, 
+               request = tmpera5_request, 
+               transfer = TRUE, 
+               path = temp_dir)
+    
+    # b. Descomprimir el mes recién descargado
+    ruta_zip_mes <- file.path(temp_dir, target_mes)
+    unzip(zipfile = ruta_zip_mes, exdir = temp_dir)
+    
+    # c. Eliminar el .zip mensual para no saturar el disco duro
+    file.remove(ruta_zip_mes)
+  }
+  
+  # 4. EMPAQUETADO FINAL DEL AÑO
+  message("\nEmpaquetando todos los meses en un solo archivo ZIP anual...")
+  
+  target_anual <- paste0(suffix, '_agera5_', year, '.zip')
+  ruta_zip_anual_absoluta <- normalizePath(file.path(output_dir, target_anual), mustWork = FALSE)
+  
+  # Listar todos los archivos NetCDF/TIF extraídos en la carpeta temporal
+  archivos_extraidos <- list.files(temp_dir, full.names = TRUE)
+  
+  # Crear el gran zip anual
+  zip::zipr(ruta_zip_anual_absoluta, files = archivos_extraidos)
+
+  print(ruta_zip_anual_absoluta)
+  # Volver al directorio original de trabajo
+    
+  # 5. LIMPIEZA
+  # Borramos la carpeta temporal y todo su contenido
+  
+  unlink(temp_dir, recursive = TRUE)
+  
+  message(paste("¡Año", year, "completado exitosamente! Archivo final guardado en:", output_dir))
+  return(paste("Año", year, "completado exitosamente."))
+}

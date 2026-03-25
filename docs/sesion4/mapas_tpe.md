@@ -1,190 +1,166 @@
 # Construcción de Mapas Agroclimáticos y Clasificación de Ambientes (TPE)
 
+Hasta ahora, hemos aprendido a procesar datos climáticos (CHIRPS/AgERA5) y de suelo (SoilGrids) por separado. Sin embargo, en el mundo real, la variabilidad espacial conjunta de las variables de suelo y clima ofrece la oportunidad de delimitar zonas edafoclimáticas contiguas. Estas zonas son fundamentales para mejorar el manejo de los recursos naturales.
+
 ## Mapas de Indicadores Agroclimáticos
 
-Los mapas finales deben cumplir estándares cartográficos mínimos: título, leyenda, escala y fuente de datos.
+La pregunta ahora es: ¿Cómo delimitamos matemáticamente estas zonas (TPEs) en R usando nuestros mapas? Como no sabemos a priori dónde están las fronteras exactas de estos agroecosistemas, estamos frente a un problema clásico de **Aprendizaje No Supervisado (Unsupervised Learning)**.
+
+Para ello, usaremos el algoritmo de [**K-Means Clustering**](https://medium.com/@abhaysingh71711/k-means-clustering-a-deep-dive-into-unsupervised-learning-81213f56cfc9)  Le pediremos a R que tome las capas creadad en Honduras y, basándose en la "distancia matemática" entre sus valores, los agrupe de forma automática en ambientes homogéneos.
+
 
 ```r
-# ============================================================
-# Mapas cartográficos de indicadores clave
-# ============================================================
-library(terra)
-library(ggplot2)
-library(tidyterra)
-library(patchwork)
-library(here)
-
-hon_pais <- vect(here("data","admin","gadm41_HND_0.shp"))
-hon_dep  <- vect(here("data","admin","gadm41_HND_1.shp"))
-
-# Función para crear mapa temático estándar
-mapa_indicador <- function(raster, titulo, subtitulo, 
-                            leyenda_nombre, paleta = "viridis",
-                            vector_pais = hon_pais, 
-                            vector_dep  = hon_dep) {
-  ggplot() +
-    geom_spatraster(data = raster) +
-    geom_spatvector(data = vector_dep,  fill = NA, color = "grey50",  linewidth = 0.2) +
-    geom_spatvector(data = vector_pais, fill = NA, color = "black",   linewidth = 0.5) +
-    scale_fill_viridis_c(name = leyenda_nombre, option = paleta, 
-                          na.value = "white", direction = 1) +
-    labs(
-      title    = titulo,
-      subtitle = subtitulo,
-      caption  = "Fuente: WorldClim v2.1 (1970–2000) | Procesado en R con terra"
-    ) +
-    coord_sf(expand = FALSE) +
-    theme_minimal(base_size = 11) +
-    theme(
-      plot.title    = element_text(face = "bold", size = 13),
-      plot.subtitle = element_text(size = 9, color = "grey40"),
-      plot.caption  = element_text(size = 8, color = "grey50"),
-      legend.position = "right",
-      panel.background = element_rect(fill = "#d0e4f0", color = NA)
-    )
-}
-
-# Mapa 1: Déficit Hídrico Total
-whd_r <- rast(here("outputs","mapas","whd_total_primera_honduras.tif"))
-p_whd <- mapa_indicador(
-  whd_r, "Déficit Hídrico Acumulado",
-  "Ciclo Primera (May–Sep) — Frijol, Honduras",
-  "WHD (mm)", paleta = "YlOrRd"
-)
-
-# Mapa 2: GDD
-gdd_r <- rast(here("outputs","mapas","gdd_primera_honduras.tif"))
-p_gdd <- mapa_indicador(
-  gdd_r, "Grados-Día de Crecimiento",
-  "Ciclo Primera (May–Sep) — Frijol, Honduras",
-  "GDD (°C·día)", paleta = "magma"
-)
-
-# Mapa 3: DTTF
-dttf_r <- rast(here("outputs","mapas","dttf_floracion_honduras.tif"))
-p_dttf <- mapa_indicador(
-  dttf_r, "Días c/ Estrés Térmico en Floración",
-  "Tmax > 35 °C · Julio — Frijol, Honduras",
-  "Días (est.)", paleta = "inferno"
-)
-
-# Panel combinado
-panel <- (p_gdd | p_whd) / p_dttf +
-  plot_annotation(
-    title    = "Indicadores Agroclimáticos para el Cultivo de Frijol — Honduras",
-    subtitle = "Ciclo de primera siembra (Mayo–Septiembre)",
-    theme    = theme(plot.title = element_text(face = "bold", size = 15))
+# Cargar funciones externas desde GitHub (Pipeline reproducible)
+source(
+  paste0(
+    "https://raw.githubusercontent.com/cbarriosperez/Taller_IndicesAgroclimaticos_Frijol/main/scripts//", 
+    "main_session2.R"
   )
-
-ggsave(here("outputs","mapas","panel_indicadores_agroclimaticos_honduras.png"),
-       plot = panel, dpi = 200, width = 14, height = 12)
-cat("Panel de mapas guardado.\n")
-```
-
----
-
-## Clasificación de Ambientes Objetivo (TPE)
-
-La **TPE** (*Target Population of Environments*) agrupa zonas productoras con perfiles de estrés similares, permitiendo diseñar estrategias de mejoramiento diferenciadas por tipo de ambiente.
-
-### Método: K-Means sobre Indicadores Agroclimáticos
-
-```r
-library(terra)
-library(tidyverse)
-library(here)
-
-# ── Construir tabla de valores por pixel ──────────────────
-indicadores_stack <- c(
-  rast(here("outputs","mapas","gdd_primera_honduras.tif")),
-  rast(here("outputs","mapas","dttf_floracion_honduras.tif")),
-  rast(here("outputs","mapas","tmin_llenado_honduras.tif")),
-  rast(here("outputs","mapas","whd_total_primera_honduras.tif")),
-  rast(here("outputs","mapas","cdd_mayo_honduras.tif"))
 )
-names(indicadores_stack) <- c("GDD","DTTF","Tmin_llenado","WHD","CDD")
 
-# Extraer valores como data.frame (excluir NAs)
-df_pixels <- as.data.frame(indicadores_stack, na.rm = TRUE, xy = TRUE)
-cat("Número de pixels válidos:", nrow(df_pixels), "\n")
+# Instalación y carga de librerías necesarias
+# factoextra: Visualización de algoritmos de clustering
+# NbClust: Determinación del número óptimo de clústeres
+# sf: Manejo de datos vectoriales
+# terra: Motor de procesamiento raster de alto rendimiento
+if(!require(factoextra)) install.packages(c("factoextra", "NbClust"))
+library(sf)
+library(terra)
+library(factoextra)
+library(tidyverse)
 
-# ── Escalar variables (media = 0, sd = 1) ─────────────────
-vars_ind <- c("GDD","DTTF","Tmin_llenado","WHD","CDD")
-df_scaled <- df_pixels |>
-  mutate(across(all_of(vars_ind), scale))
+# --- 2. LECTURA Y PREPARACIÓN DE DATOS ---
 
-# ── K-Means: determinar número óptimo de clústeres ────────
+# Cargar serie de tiempo climática (NetCDF)
+precipitacion_mensual = rast("data/clima/prec_mensual_2010_2020.nc")
+temperatura_mensual = rast("data/")
+# Cargar variables de suelo (SoilGrids) desde archivos GeoTIFF
+# wv1500/wv0033 corresponden a puntos de marchitez y capacidad de campo
+suelo = rast(c("data/suelo/clay_hnd.tif",
+               "data/suelo/sand_hnd.tif",
+               "data/suelo/nitrogen_hnd.tif",
+               "data/suelo/ph_hnd.tif",
+               "data/suelo/wv1500_hnd.tif",
+               "data/suelo/wv0033_hnd.tif"))
+
+# Renombrar capas de suelo para facilitar la interpretación
+names(suelo) = c('arcilla','arena','nitrogeno','ph', 'pmm','cc')
+
+# --- 3. ALINEACIÓN ESPACIAL (RESAMPLING) ---
+
+# Importante: Las variables climáticas y de suelo tienen resoluciones distintas.
+# Se remuestrea la precipitación para que coincida con la rejilla (grid) de suelo.
+# Método "near" (vecino más cercano) para preservar valores originales.
+precipitacion_mensual_re = resample(precipitacion_mensual, suelo[[1]], method = "near")
+
+# Crear el stack edafoclimático unificado (Suelo + Clima)
+edafoclimatica = c(suelo, precipitacion_mensual_re)
+
+# --- 4. EXTRACCIÓN DEL ÁREA DE INTERÉS (AOI) ---
+
+# Definir departamento de estudio (Olancho como ejemplo)
+departamento = 'Olancho'
+
+# Leer límites administrativos de Honduras
+hnd_departamentos = st_read('data/admin/geoBoundaries-HND-ADM1.shp')
+plot(hnd_departamentos['shapeName'])
+# Filtrar el vector por el nombre del departamento
+dep_vector = hnd_departamentos[hnd_departamentos$shapeName == departamento,]
+
+# Recortar (crop) y enmascarar (mask) el stack a la silueta de Olancho
+dep_cov = cortar_raster_usando_vector(edafoclimatica, dep_vector, mask = TRUE)
+
+# Inspección visual de las primeras 15 capas (Suelo y meses de lluvia)
+terra::plot(dep_cov[[1:15]])
+
+#  Guardar usando writeCDF 
+dep_cov_sds <- sds(as.list(dep_cov))
+names(dep_cov_sds) = names(dep_cov)
+terra::writeCDF(dep_cov_sds, 
+                filename = "outputs/edafoclimatica_olancho.nc", 
+                overwrite = TRUE)
+
+
+# --- 5. REDUCCIÓN DE DIMENSIONALIDAD (PCA) ---
+
 set.seed(42)
-wss <- map_dbl(2:8, function(k) {
-  km <- kmeans(df_scaled[, vars_ind], centers = k, nstart = 25, iter.max = 100)
-  km$tot.withinss
-})
 
-data.frame(k = 2:8, WSS = wss) |>
-  ggplot(aes(k, WSS)) +
-  geom_line(color = "#2196F3") + geom_point(size = 3) +
-  labs(title = "Método del codo — Selección de número de ambientes (TPE)",
-       x = "Número de ambientes (k)", y = "Suma de cuadrados intracluster") +
+# Escalar datos: Paso obligatorio para Machine Learning (Media 0, Desviación Estándar 1)
+# Evita que variables con unidades grandes (Precipitación) dominen sobre otras (pH)
+stack_escalado = terra::scale(dep_cov)
+
+# Análisis de Componentes Principales (PCA)
+# Útil para eliminar la correlación entre variables y reducir ruido
+pcaterra = terra::prcomp(stack_escalado, rank = 10)
+summary(pcaterra) # Ver varianza explicada por cada componente
+
+# Generar mapas de los componentes principales (Transformación espacial)
+stack_escalado_pca = terra::predict(stack_escalado, pcaterra)
+plot(stack_escalado_pca)
+
+# --- 6. OPTIMIZACIÓN DEL NÚMERO DE CLÚSTERES (K) ---
+
+# Muestreo aleatorio de píxeles para análisis estadístico (optimiza uso de memoria)
+set.seed(42)
+muestra_pixeles = spatSample(x = stack_escalado_pca, 
+                              size = 5000, 
+                              method = "random", 
+                              na.rm = TRUE, 
+                              as.df = TRUE) 
+
+# Método 1: Gráfico del Codo (Elbow) - Busca el punto donde la curva se estabiliza
+grafico_codo = fviz_nbclust(x = muestra_pixeles, 
+                            FUNcluster = kmeans, 
+                            method = "wss", 
+                            k.max = 10) +
+  labs(title = "Método del Codo (Elbow) para determinar TPEs",
+       subtitle = "Buscamos el punto donde la línea se dobla") +
+  theme_minimal()
+print(grafico_codo)
+
+# Método 2: Coeficiente de Silueta - Busca el valor máximo (separación óptima)
+grafico_silueta <- fviz_nbclust(x = muestra_pixeles, 
+                                FUNcluster = kmeans, 
+                                method = "silhouette", 
+                                k.max = 10) +
+  labs(title = "Análisis de Silueta para determinar TPEs",
+       subtitle = "Buscamos el valor máximo (K óptimo)") +
+  theme_minimal()
+print(grafico_silueta)
+
+# --- 7. CLASIFICACIÓN NO SUPERVISADA (K-MEANS) ---
+
+# Ejecución de K-means en la muestra para visualización previa
+modelo_kmeans_sample = kmeans(x = muestra_pixeles, centers = 4, iter.max = 100)
+muestra_pixeles$cluster = as.factor(unname(modelo_kmeans_sample$cluster))
+
+# Gráfico de dispersión en espacio PCA (PC1 vs PC2)
+ggplot(muestra_pixeles, aes(PC1, PC2, color= cluster))+
+  geom_point()+
+  labs(title = 'Agrupamiento K-Means en Espacio PCA')+
   theme_minimal()
 
-# ── Ajustar K-Means con k = 4 ambientes ───────────────────
-km_final <- kmeans(df_scaled[, vars_ind], centers = 4, nstart = 50, iter.max = 200)
-df_pixels$TPE <- as.factor(km_final$cluster)
+# --- 8. MAPEO ESPACIAL DE LOS CLÚSTERES (TPE) ---
 
-# ── Proyectar clústeres de vuelta al raster ────────────────
-tpe_raster <- indicadores_stack[[1]]  # plantilla
-tpe_raster[] <- NA
+# Extraer todos los valores del raster PCA
+valores_pixeles = values(stack_escalado_pca)
+indices_validos = which(complete.cases(valores_pixeles)) # Omitir píxeles con NAs
+datos_limpios = valores_pixeles[indices_validos, ]
 
-# Asignar clúster a cada pixel (por coordenadas)
-idx <- cellFromXY(tpe_raster, df_pixels[, c("x","y")])
-tpe_raster[idx] <- as.integer(df_pixels$TPE)
+# Ejecutar K-means en la población completa de píxeles
+modelo_kmeans_full = kmeans(x = datos_limpios, centers = 4, iter.max = 100)
 
-names(tpe_raster) <- "TPE_kmeans_k4"
-writeRaster(tpe_raster, here("outputs","mapas","tpe_kmeans_4ambientes_honduras.tif"),
-            overwrite = TRUE)
+# Reconstruir el mapa de clústeres
+mapa_cluster = stack_escalado_pca[[1]] # Usar una capa como plantilla
+values(mapa_cluster) = NA
+names(mapa_cluster) = 'cluster'
+mapa_cluster[indices_validos] = modelo_kmeans_full$cluster
 
-# ── Caracterizar cada ambiente ─────────────────────────────
-perfil_tpe <- df_pixels |>
-  group_by(TPE) |>
-  summarise(across(all_of(vars_ind), mean, na.rm = TRUE, .names = "{col}_mean"),
-            n_pixels = n()) |>
-  arrange(TPE)
+# Visualización del mapa final de TPEs
+plot(mapa_cluster, main = "Zonificación Agroclimática Final (4 Clústeres)")
 
-print(perfil_tpe)
-write.csv(perfil_tpe, here("outputs","tablas","perfil_ambientes_tpe_honduras.csv"),
-          row.names = FALSE)
-```
+# Exportar resultado
+dir.create('outputs', showWarnings = F)
+writeRaster(mapa_cluster, 'outputs/cluster_4.tif', overwrite = TRUE)
 
----
-
-## Mapa de TPE
-
-```r
-library(tidyterra)
-
-pal_tpe <- c("1" = "#1a9641",  # Ambiente favorable
-             "2" = "#a6d96a",  # Estrés moderado
-             "3" = "#fdae61",  # Estrés moderado-severo
-             "4" = "#d7191c")  # Estrés severo
-
-ggplot() +
-  geom_spatraster(data = as.factor(tpe_raster)) +
-  geom_spatvector(data = hon_dep,  fill = NA, color = "grey50",  linewidth = 0.2) +
-  geom_spatvector(data = hon_pais, fill = NA, color = "black",   linewidth = 0.5) +
-  scale_fill_manual(
-    values   = pal_tpe,
-    na.value = "white",
-    name     = "Ambiente\n(TPE)",
-    labels   = c("1 — Favorable","2 — Estrés moderado",
-                 "3 — Estrés mod.-severo","4 — Estrés severo")
-  ) +
-  labs(
-    title    = "Clasificación de Ambientes Objetivo (TPE) — Honduras",
-    subtitle = "K-Means sobre 5 indicadores agroclimáticos del ciclo primera (k=4)",
-    caption  = "WorldClim v2.1 | Análisis: R (terra, ggplot2)"
-  ) +
-  theme_minimal()
-
-ggsave(here("outputs","mapas","mapa_tpe_4ambientes_honduras.png"),
-       dpi = 200, width = 10, height = 7)
 ```
