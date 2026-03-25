@@ -29,9 +29,9 @@ En esta sesión final integramos todos los indicadores agroclimáticos calculado
 
 | Duración | Componente |
 |----------|-----------|
-| 30 min | Insumos faltantes |
+| 40 min | Insumos faltantes |
 | 30 min | [Zonificación](mapas_tpe.md) |
-| 30 min | [Estadística Zonal](estadistica_zonal.md) |
+| 20 min | [Estadística Zonal](estadistica_zonal.md) |
 | 30 min | Práctica |
 
 ---

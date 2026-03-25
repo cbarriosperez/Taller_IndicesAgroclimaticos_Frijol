@@ -17,6 +17,8 @@ La **estadística zonal** permite resumir los indicadores agroclimáticos (expre
 rm(list = ls())
 
 # Cargar funciones auxiliares desde GitHub (Pipeline reproducible)
+
+# Cargar funciones auxiliares desde GitHub (Pipeline reproducible)
 source(
   paste0(
     "https://raw.githubusercontent.com/cbarriosperez/Taller_IndicesAgroclimaticos_Frijol/main/scripts//", 
@@ -33,10 +35,10 @@ library(tidyverse)  # Manipulación de datos y visualización (ggplot2)
 # --- 2. CARGA DE RESULTADOS PREVIOS ---
 
 # Leer el stack edafoclimático procesado (NetCDF guardado en pasos anteriores)
-dep_cov = rast("outputs/edafoclimatica_olancho.nc")
+dep_cov = rast("outputs/suelo_indicadores_olancho.nc")
 
 # Leer el mapa de clústeres generado (Zonificación final)
-mapa_cluster = rast("outputs/cluster_4.tif")
+mapa_cluster = rast("outputs/cluster_4_olancho.tif")
 
 # --- 3. ESTADÍSTICA ZONAL: CARACTERIZACIÓN DE LOS TPE ---
 
@@ -96,29 +98,6 @@ ggplot(puntos_muestreados, aes(x = as.factor(TPE), y = value, fill = as.factor(T
   labs(title = "Variabilidad Interna de los Mega-Ambientes (TPE)",
        subtitle = "Análisis de distribución de píxeles por clúster (Muestra n=5000)",
        x = "Clúster", y = "Valor de la Variable")
-
-# --- 7. SÍNTESIS DE RESULTADOS (AGREGACIÓN FINAL) ---
-
-# Crear indicadores climáticos anuales para simplificar la toma de decisiones
-perfil_tpe_tipo = perfil_tpe %>%
-  as.data.frame() %>%
-  mutate(
-    # Acumular los 12 meses de precipitación en un total anual
-    Prec_Acumulada = rowSums(select(., contains("precipitacion"))),
-    # Promediar las temperaturas si existieran en el stack (ej. AgERA5)
-    Temp_Promedio = rowMeans(select(., contains("temperatura"))) 
-  )
-perfil_resumen <- perfil_tpe_tipo %>%
-  # Seleccionar variables clave para la recomendación agronómica
-  select(cluster, arcilla, arena, nitrogeno, ph, pmm, cc, Prec_Acumulada, Temp_Promedio) %>%
-  pivot_longer(cols = -cluster, names_to = "Variable", values_to = "Valor") %>%
-  # Clasificar variables por grupo para una visualización organizada
-  mutate(Grupo = case_when(
-    Variable == "Prec_Acumulada" ~ "Clima (Anual)",
-    Variable == "Temp_Promedio" ~ "Temperatura (Anual)",
-    TRUE ~ "Propiedades de Suelo"
-  ),
-  TPE_Cluster = as.factor(cluster))
 
 
 ```
