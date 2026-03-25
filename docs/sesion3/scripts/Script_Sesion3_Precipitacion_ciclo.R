@@ -3,7 +3,7 @@
 ##                                                                                 ##
 ## Este script crea mapas diarios de precipitación para Honduras usando            ## 
 ## CHIRPS-V3-ERA5 para el a 2025, y calcula el acumulado de lluvia para el ciclo
-## del frijol.                                                                            ##
+## del frijol.                                                                     ##
 ## Creado por: Camilo Barrios-Perez (Ph.D) - c.barrios@cgiar.org                   ##
 #####################################################################################
 
