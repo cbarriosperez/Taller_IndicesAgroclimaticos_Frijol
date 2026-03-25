@@ -2,8 +2,8 @@
 ##                   CÁLCULO DE ÍNDICES AGROCLIMÁTICOS (CHIRPS)                    ##
 ##                                                                                 ##
 ## Este script crea mapas diarios de precipitación para Honduras usando            ## 
-## CHIRPS-V3-ERA5 para el periodo 1981-2025.                                       ##
-##                                                                                 ##
+## CHIRPS-V3-ERA5 para el a 2025, y calcula el acumulado de lluvia para el ciclo
+## del frijol.                                                                            ##
 ## Creado por: Camilo Barrios-Perez (Ph.D) - c.barrios@cgiar.org                   ##
 #####################################################################################
 
