@@ -120,40 +120,5 @@ perfil_resumen <- perfil_tpe_tipo %>%
   ),
   TPE_Cluster = as.factor(cluster))
 
-# --- 8. GRÁFICO 3: SÍNTESIS AGROCLIMÁTICA PARA MEJORAMIENTO ---
-
-# Visualización simplificada: Ideal para presentar a fitomejoradores
-ggplot(perfil_resumen, aes(x = TPE_Cluster, y = Valor, fill = TPE_Cluster)) +
-  geom_col(alpha = 0.8, color = "black") +
-  # El uso de escalas libres por faceta permite comparar peras con manzanas
-  facet_wrap(~Variable, scales = "free_y") + 
-  scale_fill_brewer(palette = "Set2") +
-  theme_minimal() +
-  labs(title = "Síntesis del Perfil Ambiental por Clúster",
-       subtitle = "Resumen de factores limitantes y oferta hídrica anual",
-       x = "Clúster (TPE)",
-       y = "Valor Promedio") +
-  theme(legend.position = "none",
-        strip.text = element_text(face = "bold", size = 10))
-
-
-perfil_tpe_grupo <- perfil_long %>%
-  mutate(Tipo = if_else(str_detect(Variable, "precipitacion"), "Precipitacion", if_else(str_detect(Variable, "temperatura"),"Temperatura","Suelo")))
-         
-perfil_tpe_grupo
-
-ggplot(perfil_tpe_grupo%>%
-         filter(Tipo == 'Precipitacion'), aes(x = TPE_Cluster, y = Valor, fill = TPE_Cluster)) +
-  geom_col(alpha = 0.8, color = "black") +
-  # Usar escalas independientes (free_y) ya que pH, Arcilla y Lluvia tienen unidades distintas
-  facet_wrap(~Variable, scales = "free_y") + 
-  scale_fill_brewer(palette = "Set2") +
-  theme_minimal() +
-  labs(title = "Perfil Ambiental por Clúster (TPE)",
-       subtitle = "Precipitación acumulada mensual",
-       x = "Clúster",
-       y = "") +
-  theme(legend.position = "none",
-        strip.text = element_text(face = "bold", size = 12))
 
 ```
